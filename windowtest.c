@@ -10,6 +10,12 @@ struct {
     uint32_t *pixels;    
 } frame = {0};
 
+#if RAND_MAX == 32767
+#define Rand32() ((rand() << 16) + (rand() << 1) + (rand() & 1))
+#else
+#define Rand32() rand()
+#endif
+
 BITMAPINFO frame_bitmap_info; //bitmap info (metadata/header)
 HBITMAP frame_bitmap = 0; //handle to reference a bitmap object in memory
 HDC frame_device_context = 0; //device context
@@ -39,7 +45,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
         WS_OVERLAPPEDWINDOW,    //Window style
 
         //Size and position
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        //x  y    width height
+        640, 300, 300, 300,
 
         NULL,
         NULL,
@@ -60,7 +67,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
             DispatchMessage(&message);
         }
 
-        unsigned int p = 0;
+        static unsigned int p = 0;
         frame.pixels[(p++)%(frame.width*frame.height)] = Rand32();
         frame.pixels[Rand32()%(frame.width*frame.height)] = 0;
 
@@ -97,7 +104,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (frame_bitmap) {
                 DeleteObject(frame_bitmap);
             }
-            frame_bitmap = CreateDIBSection(NULL, &frame_bitmap_info, DIB_RGB_COLORS, &frame.pixels, 0, 0);
+            frame_bitmap = CreateDIBSection(NULL, &frame_bitmap_info, DIB_RGB_COLORS, (void **)&frame.pixels, 0, 0);
             SelectObject(frame_device_context, frame_bitmap);
 
             frame.width = LOWORD(lParam);
