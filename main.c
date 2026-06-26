@@ -1,26 +1,34 @@
+#define UNICODE //DONT FORGET TO INCLUDE UNICODE
+#define _UNICODE
 #include <stdio.h>
 #include <windows.h>
+#include <stdbool.h>
+
+bool quit = false; //Handles termination of main loop
 
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow)
 {
+    
     //1. Create Window Class
-    WNDCLASSEXA wc = {0};
+    WNDCLASS wc = {0};
+    const wchar_t CLASS_NAME[] = L"PaintClass";
 
     //1.1 Initialize mandatory members
-    wc.cbSize = sizeof(WNDCLASSEXA); 
+    wc.lpszClassName = CLASS_NAME; //Long string 
     wc.lpfnWndProc = WindowProcedure; //Pass address of window procedure and define function
-    wc.lpszClassName = (LPCTSTR) L"PaintClass"; //Long string 
+    wc.hInstance = hInstance;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
     //2. Register Window Class
-    if (!RegisterClassEx(&wc)) {
+    if (!RegisterClass(&wc)) {
         return -1;
     }
 
-    //3. Create Window
-    CreateWindowW(
-        L"PaintClass",          //Window Class name
+    //3. Create Window and store handle
+    HWND hwnd = CreateWindow(
+        CLASS_NAME,          //Window Class name
         L"Paint in C",          //Window name
         WS_OVERLAPPEDWINDOW,    //Window style
         CW_USEDEFAULT,          //X-coordinate of the upper left corner of the window
@@ -33,12 +41,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
         NULL                   //LPVOID (idk, not important yet)
     );
 
-    //4. Create a message loop
-    MSG msg = {0};
-    while (GetMessage(&msg, NULL, (UINT) NULL, (UINT) NULL)) {
-        TranslateMessage(&msg); //Translates virtual-key messages into character messsages
-        DispatchMessage(&msg);  //Dispatches message to a window procedure
+    if (hwnd == NULL) {
+        return -1;
     }
+
+    //4. Show window
+    ShowWindow(hwnd, nCmdShow);
+
+    //5. Create program loop and message loop
+    while (!quit) {
+        MSG msg = {0};
+        while (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg); //Translates virtual-key messages into character messsages
+            DispatchMessage(&msg);  //Dispatches message to a window procedure
+        }
+        //MAIN LOOP
+    }
+
     return 0;
 }
 
@@ -46,10 +65,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 {
     //1.2 Create switch statements for messages
     switch (uMsg) {
-        case WM_DESTROY:
-            PostQuitMessage(0); //Indicates to system that thread has made a request to quit (exit code 0)  
-            break;
-        default: //Default function to take care of the messages
+        case WM_DESTROY: {
+            // PostQuitMessage(0); //Indicates to system that thread has made a request to quit (exit code 0)  
+            quit = true; //Will terminate the main loop
+        } break;
+
+        default: {//Default function to take care of the messages
             return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+        } break;
     }
 }
