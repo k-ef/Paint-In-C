@@ -70,8 +70,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     switch (uMsg) {
         case WM_COMMAND: { //Will run when user invokes a command item from a menu, etc...
             switch (wParam) { //Contains ID of the parameter (Menu that was clicked/processed)
-                case 1: {
-                    MessageBeep(MB_OK);
+                case 3: { //File menu exit
+                    DestroyWindow(hWnd); //Will pass WM_DESTROY to window procedure causing the window to terminate
                 } break;
             }
         } break;
@@ -97,6 +97,9 @@ void AddMenus(HWND hWnd)
     //CREATE MENU
     hMenu = CreateMenu(); 
 
+    //Dropdown menu
+    HMENU hFileMenu = CreateMenu();
+
     //APPEND ITEMS TO MENU
     //1. Handle to menu
     //2. Appearance and behavior of menu item
@@ -104,7 +107,16 @@ void AddMenus(HWND hWnd)
     //4. Content of menu item (e.g. bitmap handle if MF_BITMAP)
     //When pressed, a message (WM_COMMAND) will be passed to the message loop process the menu
     //The identity of the menu clicked will be passed in the wParam of the window procedure 
-    AppendMenu(hMenu, MF_STRING, 1, L"Bruh");
+    // AppendMenu(hMenu, MF_STRING, 1, L"Bruh");
+    AppendMenu(hFileMenu, MF_STRING, 1, L"New");
+    AppendMenu(hFileMenu, MF_STRING, 2, L"Open");
+    AppendMenu(hFileMenu, MF_SEPARATOR, 0, NULL); //Separator, will ignore after the 2nd argument
+    AppendMenu(hFileMenu, MF_STRING, 3, L"Exit");
+
+    AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hFileMenu, L"Bruh"); //3rd argument will be the handle to popup menu
+    AppendMenu(hMenu, MF_STRING, 0, L"Help");
+
+    
 
     //SET MENU TO WINDOW
     SetMenu(hWnd, hMenu);
