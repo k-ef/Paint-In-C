@@ -4,9 +4,13 @@
 #include <windows.h>
 #include <stdbool.h>
 
+#define MAINMENU 1
+#define TOOLSMENU 2
+
 bool quit = false; //Handles termination of main loop
 
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void AddMenus(HWND hWnd); 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow)
 {
@@ -65,6 +69,22 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 {
     //1.2 Create switch statements for messages
     switch (uMsg) {
+        case WM_COMMAND: {
+            switch (wParam) {
+                case MAINMENU: {
+                    //ADD SOMETHING HERE
+                }
+                case TOOLSMENU: {
+                    //ADD SOMETHING HERE
+                }
+            }
+        }
+
+        case WM_CREATE: { //Message flag is passed whenever the window is created
+            AddMenus(hWnd);
+        } break;
+
+        case WM_QUIT:
         case WM_DESTROY: {
             // PostQuitMessage(0); //Indicates to system that thread has made a request to quit (exit code 0)  
             quit = true; //Will terminate the main loop
@@ -74,4 +94,23 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             return DefWindowProcW(hWnd, uMsg, wParam, lParam);
         } break;
     }
+}
+
+void AddMenus(HWND hWnd)
+{
+    HMENU hMenu_Main = CreateMenu(); //Creates main menu bar
+    HMENU hMenu_Tools = CreateMenu();
+
+    //Submenus inside Paint menu tab
+    AppendMenu(hMenu_Tools, MF_STRING, TOOLSMENU, L"Brush");
+    AppendMenu(hMenu_Tools, MF_STRING, TOOLSMENU, L"Eraser");
+    AppendMenu(hMenu_Tools, MF_STRING, TOOLSMENU, L"Rotate");
+
+    //Menus inside main menu bar
+    AppendMenu(hMenu_Main, MF_STRING, MAINMENU, L"File"); 
+    AppendMenu(hMenu_Main, MF_STRING, MAINMENU, L"Edit"); 
+    AppendMenu(hMenu_Main, MF_STRING, MAINMENU, L"View"); 
+    AppendMenu(hMenu_Main, MF_POPUP, (UINT_PTR)hMenu_Tools, L"Paint");
+
+    SetMenu(hWnd, hMenu_Main);
 }
