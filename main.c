@@ -11,6 +11,7 @@ bool quit = false; //Handles termination of main loop
 
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void AddMenus(HWND hWnd); 
+void AddToolbar(HWND hWnd);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow)
 {
@@ -31,26 +32,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
     }
 
     //3. Create Window and store handle
-    HWND hwnd = CreateWindow(
-        CLASS_NAME,          //Window Class name
-        L"Paint in C",          //Window name
-        WS_OVERLAPPEDWINDOW,    //Window style
-        CW_USEDEFAULT,          //X-coordinate of the upper left corner of the window
-        CW_USEDEFAULT,          //Y-coordinate of the upper left corner of the window
-        500,                    //Window width
-        500,                    //Window height
-        NULL,                   //Handle of the parent window (NULL because independent window)
-        NULL,                   //Handle to a menu
-        hInstance,              //Handle to the instance of the module to be associated with the window
-        NULL                   //LPVOID (idk, not important yet)
+    HWND hWnd = CreateWindow(
+        CLASS_NAME,                     //Window Class name
+        L"Paint in C",                  //Window name
+        WS_OVERLAPPEDWINDOW,            //Window style
+        CW_USEDEFAULT, CW_USEDEFAULT,   //X and y coordinate of the upper left corner of the window
+        500, 500,                       //Window width and height                   
+        NULL,                           //Handle of the parent window (NULL because independent window)
+        NULL,                           //Handle to a menu
+        hInstance,                      //Handle to the instance of the module to be associated with the window
+        NULL                            //LPVOID (idk, not important yet)
     );
 
-    if (hwnd == NULL) {
+    if (hWnd == NULL) {
         return -1;
     }
 
     //4. Show window
-    ShowWindow(hwnd, nCmdShow);
+    ShowWindow(hWnd, nCmdShow);
 
     //5. Create program loop and message loop
     while (!quit) {
@@ -59,7 +58,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
             TranslateMessage(&msg); //Translates virtual-key messages into character messsages
             DispatchMessage(&msg);  //Dispatches message to a window procedure
         }
-        //MAIN LOOP
     }
 
     return 0;
@@ -75,13 +73,14 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                     //ADD SOMETHING HERE
                 }
                 case TOOLSMENU: {
-                    //ADD SOMETHING HERE
+                    printf("button pressed\n");
                 }
             }
         }
 
         case WM_CREATE: { //Message flag is passed whenever the window is created
             AddMenus(hWnd);
+            AddToolbar(hWnd);
         } break;
 
         case WM_QUIT:
@@ -99,18 +98,60 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 void AddMenus(HWND hWnd)
 {
     HMENU hMenu_Main = CreateMenu(); //Creates main menu bar
-    HMENU hMenu_Tools = CreateMenu();
-
-    //Submenus inside Paint menu tab
-    AppendMenu(hMenu_Tools, MF_STRING, TOOLSMENU, L"Brush");
-    AppendMenu(hMenu_Tools, MF_STRING, TOOLSMENU, L"Eraser");
-    AppendMenu(hMenu_Tools, MF_STRING, TOOLSMENU, L"Rotate");
 
     //Menus inside main menu bar
     AppendMenu(hMenu_Main, MF_STRING, MAINMENU, L"File"); 
     AppendMenu(hMenu_Main, MF_STRING, MAINMENU, L"Edit"); 
     AppendMenu(hMenu_Main, MF_STRING, MAINMENU, L"View"); 
-    AppendMenu(hMenu_Main, MF_POPUP, (UINT_PTR)hMenu_Tools, L"Paint");
 
     SetMenu(hWnd, hMenu_Main);
+}
+
+void AddToolbar(HWND hWnd)
+{   
+    //Create another class for toolbar 'div'
+    WNDCLASS tc = {0};
+    const wchar_t tCLASS_NAME[] = L"Toolbar";
+
+    tc.lpszClassName = tCLASS_NAME;
+    tc.lpfnWndProc = DefWindowProc;
+    tc.hbrBackground = (HBRUSH)COLOR_GRAYTEXT;
+    tc.hInstance = NULL;
+
+    if(!RegisterClass(&tc)) {
+        return;
+    }
+
+    RECT MainDimensions = {0}; //NEED TO FIX
+    GetWindowRect(hWnd, &MainDimensions);
+    HWND hToolbar = CreateWindow(
+        tCLASS_NAME,
+        L"",
+        WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN,
+        0, 0,
+        (int)MainDimensions.right, (int)(MainDimensions.bottom / 10),
+        hWnd,
+        NULL,
+        NULL,
+        NULL
+    );
+
+    RECT ToolbarDimensions = {0};
+    GetWindowRect(hToolbar, &ToolbarDimensions);
+    printf("left: %d\n top: %d\n right: %d\n bottom: %d\n",
+        ToolbarDimensions.left,
+        ToolbarDimensions.top,
+        ToolbarDimensions.right,
+        ToolbarDimensions.bottom);
+    CreateWindow(
+        L"Button",
+        L"Brush",
+        WS_VISIBLE | WS_CHILD,
+        (int)ToolbarDimensions.left, (int)ToolbarDimensions.top,
+        160, 50,
+        hToolbar,
+        (HMENU)TOOLSMENU,
+        NULL,
+        NULL
+    );
 }
